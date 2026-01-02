@@ -36,25 +36,21 @@ namespace SystemMonitor
                     cpu = hw.Sensors.FirstOrDefault(s => s.SensorType == SensorType.Load && s.Name == "CPU Total")?.Value ?? 0;
 
                     // Get CPU temperature - try multiple sensor names and get the maximum temperature
-                    var tempSensors = hw.Sensors.Where(s => s.SensorType == SensorType.Temperature && s.Value.HasValue).ToList();
+                    var tempSensors = hw.Sensors.Where(s => s.SensorType == SensorType.Temperature).ToList();
                     if (tempSensors.Any())
                     {
                         // Find sensors with common CPU temperature names
-                        var cpuPackage = tempSensors.FirstOrDefault(s => s.Name.Contains("Package", StringComparison.OrdinalIgnoreCase));
-                        var cpuCore = tempSensors.FirstOrDefault(s => s.Name.Contains("Core", StringComparison.OrdinalIgnoreCase));
+                        var cpuPackage = tempSensors.FirstOrDefault(s =>
+                            s.Name.Contains("Package", StringComparison.OrdinalIgnoreCase) ||
+                            s.Name.Contains("CPU", StringComparison.OrdinalIgnoreCase));
 
-                        if (cpuPackage != null && cpuPackage.Value.HasValue)
+                        // Get all available temperature values
+                        var availableTemps = tempSensors.Where(s => s.Value.HasValue && s.Value.Value > 0).Select(s => s.Value.Value).ToList();
+
+                        if (availableTemps.Any())
                         {
-                            cpuTemp = cpuPackage.Value.Value;
-                        }
-                        else if (cpuCore != null && cpuCore.Value.HasValue)
-                        {
-                            cpuTemp = cpuCore.Value.Value;
-                        }
-                        else
-                        {
-                            // Get the maximum temperature from all CPU temperature sensors
-                            cpuTemp = tempSensors.Max(s => s.Value.Value);
+                            // Get the maximum temperature (usually the hottest core/package)
+                            cpuTemp = availableTemps.Max();
                         }
                     }
                 }
