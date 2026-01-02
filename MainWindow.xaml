@@ -5,7 +5,7 @@
     xmlns:local="clr-namespace:SystemMonitor"
     Title="Overlay"
     Width="500"
-    Height="180"
+    Height="175"
     AllowsTransparency="True"
     Background="Transparent"
     MouseDown="Window_MouseDown"
