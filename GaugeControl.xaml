@@ -13,41 +13,47 @@
             StrokeThickness="12">
             <Path.Data>
                 <PathGeometry>
-                    <PathFigure StartPoint="20,80">
-                        <ArcSegment
-                            IsLargeArc="True"
-                            Point="120,80"
-                            RotationAngle="0"
-                            Size="50,50"
-                            SweepDirection="Clockwise" />
-                    </PathFigure>
-                </PathGeometry>
-            </Path.Data>
-        </Path>
+                <PathFigure StartPoint="70,30">
+                    <ArcSegment
+                        IsLargeArc="True"
+                        Point="70,130"
+                        RotationAngle="0"
+                        Size="50,50"
+                        SweepDirection="Clockwise" />
+                </PathFigure>
+            </PathGeometry>
+        </Path.Data>
+    </Path>
 
-        <!--  Active Value Arc (Colored)  -->
-        <Path
-            x:Name="ActivePath"
-            StrokeEndLineCap="Round"
-            StrokeStartLineCap="Round"
-            StrokeThickness="12">
-            <Path.Data>
-                <PathGeometry>
-                    <PathFigure StartPoint="20,80">
-                        <!--  EndPoint calculated in code  -->
-                        <ArcSegment
-                            x:Name="ActiveSegment"
-                            IsLargeArc="False"
-                            Point="20,80"
-                            Size="50,50"
-                            SweepDirection="Clockwise" />
-                    </PathFigure>
-                </PathGeometry>
-            </Path.Data>
-        </Path>
+    <!--  Active Value Arc (Colored with Gradient)  -->
+    <Path
+        x:Name="ActivePath"
+        StrokeEndLineCap="Round"
+        StrokeStartLineCap="Round"
+        StrokeThickness="12">
+        <Path.Stroke>
+            <LinearGradientBrush x:Name="GaugeGradient" StartPoint="0,1" EndPoint="0,0">
+                <GradientStop x:Name="GradientStart" Offset="0" Color="#00FF88"/>
+                <GradientStop x:Name="GradientEnd" Offset="1" Color="#00FF88"/>
+            </LinearGradientBrush>
+        </Path.Stroke>
+        <Path.Data>
+            <PathGeometry>
+                <PathFigure StartPoint="70,130">
+                    <!--  EndPoint calculated in code  -->
+                    <ArcSegment
+                        x:Name="ActiveSegment"
+                        IsLargeArc="False"
+                        Point="70,130"
+                        Size="50,50"
+                        SweepDirection="CounterClockwise" />
+                </PathFigure>
+            </PathGeometry>
+        </Path.Data>
+    </Path>
 
-        <!--  Text Labels  -->
-        <StackPanel
+    <!--  Text Labels  -->
+    <StackPanel
             Margin="0,0,0,15"
             HorizontalAlignment="Center"
             VerticalAlignment="Bottom">

@@ -1,0 +1,65 @@
+<UserControl
+    x:Class="SystemMonitor.RamBarControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Width="440"
+    Height="40"
+    Loaded="UserControl_Loaded">
+    <Grid Margin="10,5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Label Row -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,5">
+            <TextBlock
+                Text="RAM"
+                FontSize="14"
+                FontWeight="SemiBold"
+                Foreground="#3388FF"/>
+        </StackPanel>
+
+        <!-- Bar and Value Row -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Bar Background -->
+            <Border
+                x:Name="BarBackground"
+                Grid.Column="0"
+                Height="12"
+                Background="#333333"
+                CornerRadius="6"/>
+            <!-- Bar Fill with Gradient -->
+            <Border
+                x:Name="BarFill"
+                Grid.Column="0"
+                Height="12"
+                Width="0"
+                HorizontalAlignment="Left"
+                CornerRadius="6"
+                ClipToBounds="True">
+                <Border.Background>
+                    <LinearGradientBrush x:Name="BarGradient" StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop x:Name="GradientStart" Offset="0" Color="#00FF88"/>
+                        <GradientStop x:Name="GradientEnd" Offset="1" Color="#00FF88"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+
+            <!-- Value Text -->
+            <TextBlock
+                x:Name="ValueText"
+                Grid.Column="1"
+                FontSize="13"
+                FontWeight="SemiBold"
+                Foreground="#AAAAAA"
+                Margin="10,0,0,0"
+                Text="0 GB / 0 GB"/>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -19,13 +19,8 @@ namespace SystemMonitor
 
             // Setup Gauges
             CpuGauge.SetLabel("CPU");
-            CpuGauge.SetColor("#FF3333"); // Red
-
             GpuGauge.SetLabel("GPU");
-            GpuGauge.SetColor("#00FF88"); // Green/Cyan
-
-            RamGauge.SetLabel("RAM");
-            RamGauge.SetColor("#3388FF"); // Blue
+            // Colors are dynamically set based on usage
 
             // Setup Timer (1 second update)
             _timer = new DispatcherTimer();
@@ -40,7 +35,8 @@ namespace SystemMonitor
 
             CpuGauge.UpdateValue(stats.cpu);
             GpuGauge.UpdateValue(stats.gpu);
-            RamGauge.UpdateValue(stats.ram);
+            TempBar.UpdateValue(stats.cpuTemp);
+            RamBar.UpdateValue(stats.ramAvailable, stats.ramTotal);
         }
 
         // Allow dragging the window
