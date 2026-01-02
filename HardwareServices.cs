@@ -1,4 +1,5 @@
 ﻿using LibreHardwareMonitor.Hardware;
+using System;
 using System.Linq;
 
 namespace SystemMonitor
@@ -35,12 +36,27 @@ namespace SystemMonitor
                     // "CPU Total" is usually the best metric
                     cpu = hw.Sensors.FirstOrDefault(s => s.SensorType == SensorType.Load && s.Name == "CPU Total")?.Value ?? 0;
 
-                    // Get CPU temperature - get all temperature sensors and find the highest valid value
-                    var tempSensors = hw.Sensors.Where(s => s.SensorType == SensorType.Temperature && s.Value.HasValue && s.Value.Value > 20).ToList();
+                    // Get CPU temperature - get all temperature sensors
+                    var allTempSensors = hw.Sensors.Where(s => s.SensorType == SensorType.Temperature).ToList();
+                    
+                    System.Diagnostics.Debug.WriteLine($"=== CPU Temperature Sensors ({allTempSensors.Count}) ===");
+                    foreach (var ts in allTempSensors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"  {ts.Name}: {ts.Value}°C");
+                    }
+                    
+                    // Filter for valid temperatures (between 0 and 150°C)
+                    var tempSensors = allTempSensors.Where(s => s.Value.HasValue && s.Value.Value > 0 && s.Value.Value < 150).ToList();
+                    
                     if (tempSensors.Any())
                     {
                         // Get the maximum temperature (usually the hottest core/package)
                         cpuTemp = tempSensors.Max(s => s.Value.Value);
+                        System.Diagnostics.Debug.WriteLine($"Selected CPU Temp: {cpuTemp}°C");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("No valid CPU temperature sensors found!");
                     }
                 }
                 // Check for both Nvidia and AMD
@@ -53,8 +69,13 @@ namespace SystemMonitor
                     // Try to get available and total memory in GB
                     // LibreHardwareMonitor reports memory differently per system
                     
-                    // Debug: Log all memory sensors
+                    // Debug: Log all memory sensors to console
                     var memorySensors = hw.Sensors.Where(s => s.SensorType == SensorType.Data || s.SensorType == SensorType.Load).ToList();
+                    System.Diagnostics.Debug.WriteLine("=== Memory Sensors ===");
+                    foreach (var sensor in memorySensors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Sensor: {sensor.Name}, Type: {sensor.SensorType}, Value: {sensor.Value}");
+                    }
                     
                     // Try multiple strategies to find memory values
                     
@@ -93,13 +114,26 @@ namespace SystemMonitor
                             s.Name.Contains("Memory", StringComparison.OrdinalIgnoreCase));
                     }
 
-                    // Get available memory
+                    // Get available memory (values are already in GB)
                     if (availableSensor != null && availableSensor.Value.HasValue && availableSensor.Value.Value > 0)
-                        ramAvailable = (float)(availableSensor.Value.Value / (1024.0 * 1024.0 * 1024.0)); // Convert to GB
+                    {
+                        ramAvailable = availableSensor.Value.Value;
+                        System.Diagnostics.Debug.WriteLine($"Available RAM from sensor: {ramAvailable:F2} GB");
+                    }
 
-                    // Get total memory
-                    if (totalSensor != null && totalSensor.Value.HasValue && totalSensor.Value.Value > 0)
-                        ramTotal = (float)(totalSensor.Value.Value / (1024.0 * 1024.0 * 1024.0)); // Convert to GB
+                    // Get total memory - calculate from used + available or from load percentage
+                    var usedSensor = hw.Sensors.FirstOrDefault(s => 
+                        s.SensorType == SensorType.Data && 
+                        s.Name.Contains("Used", StringComparison.OrdinalIgnoreCase) &&
+                        s.Name.Contains("Memory", StringComparison.OrdinalIgnoreCase) &&
+                        !s.Name.Contains("Virtual", StringComparison.OrdinalIgnoreCase));
+                    
+                    if (usedSensor != null && usedSensor.Value.HasValue && usedSensor.Value.Value > 0)
+                    {
+                        float usedGB = usedSensor.Value.Value;
+                        ramTotal = usedGB + ramAvailable;
+                        System.Diagnostics.Debug.WriteLine($"Total RAM calculated from Used ({usedGB:F2} GB) + Available ({ramAvailable:F2} GB) = {ramTotal:F2} GB");
+                    }
 
                     // Strategy 4: Calculate from memory load percentage if still no values
                     if (ramTotal <= 0)
