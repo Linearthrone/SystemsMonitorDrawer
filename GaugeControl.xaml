@@ -52,6 +52,45 @@
         </Path.Data>
     </Path>
 
+    <!--  Percentage Markers  -->
+    <Grid>
+        <!--  25% Marker (45 degrees)  -->
+        <TextBlock
+            Text="25"
+            FontSize="10"
+            FontWeight="SemiBold"
+            Foreground="#666666"
+            Margin="0,0,0,0">
+            <TextBlock.RenderTransform>
+                <TranslateTransform X="105" Y="115"/>
+            </TextBlock.RenderTransform>
+        </TextBlock>
+
+        <!--  50% Marker (0 degrees)  -->
+        <TextBlock
+            Text="50"
+            FontSize="10"
+            FontWeight="SemiBold"
+            Foreground="#666666"
+            Margin="0,0,0,0">
+            <TextBlock.RenderTransform>
+                <TranslateTransform X="125" Y="75"/>
+            </TextBlock.RenderTransform>
+        </TextBlock>
+
+        <!--  75% Marker (-45 degrees)  -->
+        <TextBlock
+            Text="75"
+            FontSize="10"
+            FontWeight="SemiBold"
+            Foreground="#666666"
+            Margin="0,0,0,0">
+            <TextBlock.RenderTransform>
+                <TranslateTransform X="105" Y="35"/>
+            </TextBlock.RenderTransform>
+        </TextBlock>
+    </Grid>
+
     <!--  Text Labels  -->
     <StackPanel
             Margin="0,0,0,15"
