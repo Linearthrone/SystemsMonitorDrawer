@@ -38,14 +38,14 @@ namespace SystemMonitor
                 hw.Update(); // Vital: refreshes the sensor data
                 Debug.WriteLine($"=== Hardware: {hw.Name} ({hw.HardwareType}) ===");
                 Debug.WriteLine($"  Total Sensors: {hw.Sensors.Count()}");
-                
+
                 // Log all sensor types
                 var sensorGroups = hw.Sensors.GroupBy(s => s.SensorType);
                 foreach (var group in sensorGroups)
                 {
                     Debug.WriteLine($"    {group.Key}: {group.Count()} sensors");
                 }
-                
+
                 fanCandidates.AddRange(GetFanSensors(hw));
 
                 if (hw.HardwareType == HardwareType.Cpu)
@@ -55,16 +55,16 @@ namespace SystemMonitor
 
                     // Get CPU temperature - get all temperature sensors
                     var allTempSensors = hw.Sensors.Where(s => s.SensorType == SensorType.Temperature).ToList();
-                    
+
                     System.Diagnostics.Debug.WriteLine($"=== CPU Temperature Sensors ({allTempSensors.Count}) ===");
                     foreach (var ts in allTempSensors)
                     {
                         System.Diagnostics.Debug.WriteLine($"  {ts.Name}: {ts.Value}°C");
                     }
-                    
+
                     // Filter for valid temperatures (between 0 and 150°C)
                     var tempSensors = allTempSensors.Where(s => s.Value.HasValue && s.Value.Value > 0 && s.Value.Value < 150).ToList();
-                    
+
                     if (tempSensors.Any())
                     {
                         // Get the maximum temperature (usually the hottest core/package)
@@ -86,7 +86,7 @@ namespace SystemMonitor
                 {
                     // Try to get available and total memory in GB
                     // LibreHardwareMonitor reports memory differently per system
-                    
+
                     // Debug: Log all memory sensors to console
                     var memorySensors = hw.Sensors.Where(s => s.SensorType == SensorType.Data || s.SensorType == SensorType.Load).ToList();
                     System.Diagnostics.Debug.WriteLine("=== Memory Sensors ===");
@@ -94,41 +94,41 @@ namespace SystemMonitor
                     {
                         System.Diagnostics.Debug.WriteLine($"Sensor: {sensor.Name}, Type: {sensor.SensorType}, Value: {sensor.Value}");
                     }
-                    
+
                     // Try multiple strategies to find memory values
-                    
+
                     // Strategy 1: Look for exact matches first
-                    var availableSensor = hw.Sensors.FirstOrDefault(s => 
-                        s.SensorType == SensorType.Data && 
+                    var availableSensor = hw.Sensors.FirstOrDefault(s =>
+                        s.SensorType == SensorType.Data &&
                         s.Name.Equals("Memory Available", StringComparison.OrdinalIgnoreCase));
-                    
-                    var totalSensor = hw.Sensors.FirstOrDefault(s => 
-                        s.SensorType == SensorType.Data && 
+
+                    var totalSensor = hw.Sensors.FirstOrDefault(s =>
+                        s.SensorType == SensorType.Data &&
                         s.Name.Equals("Memory", StringComparison.OrdinalIgnoreCase));
-                    
+
                     // Strategy 2: Pattern matching if exact matches fail
                     if (availableSensor == null)
                     {
-                        availableSensor = hw.Sensors.FirstOrDefault(s => 
-                            s.SensorType == SensorType.Data && 
+                        availableSensor = hw.Sensors.FirstOrDefault(s =>
+                            s.SensorType == SensorType.Data &&
                             (s.Name.Contains("Available", StringComparison.OrdinalIgnoreCase) ||
                              s.Name.Contains("Free", StringComparison.OrdinalIgnoreCase)));
                     }
-                    
+
                     if (totalSensor == null)
                     {
-                        totalSensor = hw.Sensors.FirstOrDefault(s => 
-                            s.SensorType == SensorType.Data && 
+                        totalSensor = hw.Sensors.FirstOrDefault(s =>
+                            s.SensorType == SensorType.Data &&
                             s.Name.Contains("Memory", StringComparison.OrdinalIgnoreCase) &&
                             !s.Name.Contains("Available", StringComparison.OrdinalIgnoreCase) &&
                             !s.Name.Contains("Used", StringComparison.OrdinalIgnoreCase));
                     }
-                    
+
                     // Strategy 3: Try using any data sensor with "Memory" in the name
                     if (totalSensor == null)
                     {
-                        totalSensor = hw.Sensors.FirstOrDefault(s => 
-                            s.SensorType == SensorType.Data && 
+                        totalSensor = hw.Sensors.FirstOrDefault(s =>
+                            s.SensorType == SensorType.Data &&
                             s.Name.Contains("Memory", StringComparison.OrdinalIgnoreCase));
                     }
 
@@ -140,12 +140,12 @@ namespace SystemMonitor
                     }
 
                     // Get total memory - calculate from used + available or from load percentage
-                    var usedSensor = hw.Sensors.FirstOrDefault(s => 
-                        s.SensorType == SensorType.Data && 
+                    var usedSensor = hw.Sensors.FirstOrDefault(s =>
+                        s.SensorType == SensorType.Data &&
                         s.Name.Contains("Used", StringComparison.OrdinalIgnoreCase) &&
                         s.Name.Contains("Memory", StringComparison.OrdinalIgnoreCase) &&
                         !s.Name.Contains("Virtual", StringComparison.OrdinalIgnoreCase));
-                    
+
                     if (usedSensor != null && usedSensor.Value.HasValue && usedSensor.Value.Value > 0)
                     {
                         float usedGB = usedSensor.Value.Value;
@@ -156,19 +156,19 @@ namespace SystemMonitor
                     // Strategy 4: Calculate from memory load percentage if still no values
                     if (ramTotal <= 0)
                     {
-                        var memoryLoadSensor = hw.Sensors.FirstOrDefault(s => 
-                            s.SensorType == SensorType.Load && 
+                        var memoryLoadSensor = hw.Sensors.FirstOrDefault(s =>
+                            s.SensorType == SensorType.Load &&
                             s.Name.Contains("Memory", StringComparison.OrdinalIgnoreCase));
-                        
+
                         if (memoryLoadSensor != null && memoryLoadSensor.Value.HasValue)
                         {
                             // This gives us percentage, but we need actual GB values
                             // If we have a value that looks like GB already, use it
-                            var anyMemorySensor = hw.Sensors.FirstOrDefault(s => 
-                                s.SensorType == SensorType.Data && 
-                                s.Value.HasValue && 
+                            var anyMemorySensor = hw.Sensors.FirstOrDefault(s =>
+                                s.SensorType == SensorType.Data &&
+                                s.Value.HasValue &&
                                 s.Value.Value > 1000000); // At least 1MB
-                            
+
                             if (anyMemorySensor != null)
                             {
                                 ramTotal = (float)(anyMemorySensor.Value.Value / (1024.0 * 1024.0 * 1024.0));
@@ -235,5 +235,32 @@ namespace SystemMonitor
         {
             _computer.Close();
         }
+        public int GetCpuFanRpm()
+        {
+            int rpm = 0;
+
+            foreach (var hw in _computer.Hardware)
+            {
+                // ASUS fans usually live in SuperIO or Motherboard types
+                if (hw.HardwareType == HardwareType.SuperIO || hw.HardwareType == HardwareType.Motherboard)
+                {
+                    hw.Update();
+
+                    // Look for specific CPU fan
+                    var cpuFan = hw.Sensors.FirstOrDefault(s =>
+                        s.SensorType == SensorType.Fan &&
+                        (s.Name.Contains("CPU") || s.Name.Contains("#1")) // Common ASUS names
+                    );
+
+                    if (cpuFan != null && cpuFan.Value.HasValue)
+                    {
+                        rpm = (int)cpuFan.Value.Value;
+                        break; // Found it, get out
+                    }
+                }
+            }
+            return rpm;
+        }
+
     }
 }
