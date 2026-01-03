@@ -37,6 +37,7 @@ namespace SystemMonitor
             GpuGauge.UpdateValue(stats.gpu);
             TempBar.UpdateValue(stats.cpuTemp);
             RamBar.UpdateValue(stats.ramAvailable, stats.ramTotal);
+            CpuFanGauge.UpdateRpm(stats.cpuFanRpm);
         }
 
         // Allow dragging the window

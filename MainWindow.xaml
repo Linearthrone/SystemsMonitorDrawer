@@ -29,7 +29,10 @@
                 Orientation="Horizontal"
                 Margin="0,10,0,10">
                 <local:TemperatureBarControl x:Name="TempBar" Margin="5" />
-                <local:GaugeControl x:Name="CpuGauge" Margin="5" />
+                <Grid Margin="5">
+                    <local:GaugeControl x:Name="CpuGauge" />
+                    <local:FanGaugeControl x:Name="CpuFanGauge" VerticalAlignment="Top" HorizontalAlignment="Center" />
+                </Grid>
                 <local:GaugeControl x:Name="GpuGauge" Margin="5" />
             </StackPanel>
             <!--  RAM Bar  -->

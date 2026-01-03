@@ -1,5 +1,6 @@
 ﻿using LibreHardwareMonitor.Hardware;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SystemMonitor
@@ -14,22 +15,26 @@ namespace SystemMonitor
             {
                 IsCpuEnabled = true,
                 IsGpuEnabled = true,
-                IsMemoryEnabled = true
+                IsMemoryEnabled = true,
+                IsMotherboardEnabled = true
             };
             _computer.Open();
         }
 
-        public (float cpu, float gpu, float cpuTemp, float ramAvailable, float ramTotal) GetUsage()
+        public (float cpu, float gpu, float cpuTemp, float ramAvailable, float ramTotal, float cpuFanRpm) GetUsage()
         {
             float cpu = 0;
             float gpu = 0;
             float cpuTemp = 0;
             float ramAvailable = 0;
             float ramTotal = 0;
+            float cpuFanRpm = 0;
+            var fanCandidates = new List<ISensor>();
 
             foreach (var hw in _computer.Hardware)
             {
                 hw.Update(); // Vital: refreshes the sensor data
+                fanCandidates.AddRange(GetFanSensors(hw));
 
                 if (hw.HardwareType == HardwareType.Cpu)
                 {
@@ -58,6 +63,7 @@ namespace SystemMonitor
                     {
                         System.Diagnostics.Debug.WriteLine("No valid CPU temperature sensors found!");
                     }
+
                 }
                 // Check for both Nvidia and AMD
                 else if (hw.HardwareType == HardwareType.GpuNvidia || hw.HardwareType == HardwareType.GpuAmd)
@@ -162,7 +168,35 @@ namespace SystemMonitor
                 }
             }
 
-            return (cpu, gpu, cpuTemp, ramAvailable, ramTotal);
+            var fanSensors = fanCandidates
+                .Where(s => s.SensorType == SensorType.Fan && s.Value.HasValue && s.Value.Value > 0)
+                .OrderByDescending(s => s.Value)
+                .ToList();
+
+            if (fanSensors.Any())
+            {
+                var preferred = fanSensors
+                    .FirstOrDefault(s => s.Name.IndexOf("CPU", StringComparison.OrdinalIgnoreCase) >= 0)
+                    ?? fanSensors.First();
+                cpuFanRpm = preferred.Value ?? 0;
+                System.Diagnostics.Debug.WriteLine($"CPU Fan Sensor: {preferred.Name} => {cpuFanRpm} RPM");
+            }
+
+            return (cpu, gpu, cpuTemp, ramAvailable, ramTotal, cpuFanRpm);
+        }
+
+        private IEnumerable<ISensor> GetFanSensors(IHardware hardware)
+        {
+            var list = new List<ISensor>();
+            list.AddRange(hardware.Sensors.Where(s => s.SensorType == SensorType.Fan));
+
+            foreach (var sub in hardware.SubHardware)
+            {
+                sub.Update();
+                list.AddRange(GetFanSensors(sub));
+            }
+
+            return list;
         }
 
         public void Close()
