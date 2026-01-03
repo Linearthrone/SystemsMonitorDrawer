@@ -9,6 +9,8 @@ namespace SystemMonitor
     {
         private HardwareService _monitor;
         private DispatcherTimer _timer;
+        private bool _fanGaugeVisible = true;
+        private bool _firstTick = true;
 
         public MainWindow()
         {
@@ -37,7 +39,20 @@ namespace SystemMonitor
             GpuGauge.UpdateValue(stats.gpu);
             TempBar.UpdateValue(stats.cpuTemp);
             RamBar.UpdateValue(stats.ramAvailable, stats.ramTotal);
-            CpuFanGauge.UpdateRpm(stats.cpuFanRpm);
+            
+            // Hide fan gauge if no RPM data available
+            if (_firstTick && stats.cpuFanRpm == 0)
+            {
+                CpuFanGauge.Visibility = Visibility.Collapsed;
+                _fanGaugeVisible = false;
+            }
+            
+            if (_fanGaugeVisible)
+            {
+                CpuFanGauge.UpdateRpm(stats.cpuFanRpm);
+            }
+            
+            _firstTick = false;
         }
 
         // Allow dragging the window
