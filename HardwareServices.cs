@@ -36,6 +36,16 @@ namespace SystemMonitor
             foreach (var hw in _computer.Hardware)
             {
                 hw.Update(); // Vital: refreshes the sensor data
+                Debug.WriteLine($"=== Hardware: {hw.Name} ({hw.HardwareType}) ===");
+                Debug.WriteLine($"  Total Sensors: {hw.Sensors.Count()}");
+                
+                // Log all sensor types
+                var sensorGroups = hw.Sensors.GroupBy(s => s.SensorType);
+                foreach (var group in sensorGroups)
+                {
+                    Debug.WriteLine($"    {group.Key}: {group.Count()} sensors");
+                }
+                
                 fanCandidates.AddRange(GetFanSensors(hw));
 
                 if (hw.HardwareType == HardwareType.Cpu)
@@ -200,11 +210,21 @@ namespace SystemMonitor
         private IEnumerable<ISensor> GetFanSensors(IHardware hardware)
         {
             var list = new List<ISensor>();
-            list.AddRange(hardware.Sensors.Where(s => s.SensorType == SensorType.Fan));
+            var fanSensorsInHW = hardware.Sensors.Where(s => s.SensorType == SensorType.Fan).ToList();
+            if (fanSensorsInHW.Any())
+            {
+                Debug.WriteLine($"  Found {fanSensorsInHW.Count} fan sensors in {hardware.Name}");
+                foreach (var fan in fanSensorsInHW)
+                {
+                    Debug.WriteLine($"    - {fan.Name}: {fan.Value}");
+                }
+            }
+            list.AddRange(fanSensorsInHW);
 
             foreach (var sub in hardware.SubHardware)
             {
                 sub.Update();
+                Debug.WriteLine($"  SubHardware: {sub.Name} ({sub.HardwareType})");
                 list.AddRange(GetFanSensors(sub));
             }
 
