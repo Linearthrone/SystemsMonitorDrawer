@@ -54,12 +54,13 @@ namespace SystemMonitor
             };
             GaugeCanvas.Children.Add(arcPath);
 
-            // Tick marks and numbers
+            // Tick marks (minor every 250 RPM, major every 1500 RPM)
             for (double value = 0; value <= MaxRpm + 0.1; value += TickStep)
             {
+                var isMajor = Math.Abs(value % 1500.0) < 0.1;
                 var angle = StartAngle + (value / MaxRpm) * SweepAngle;
                 var outer = PointFromAngle(angle, Radius + 2);
-                var inner = PointFromAngle(angle, Radius - 10);
+                var inner = PointFromAngle(angle, isMajor ? Radius - 18 : Radius - 10);
 
                 var tick = new Line
                 {
@@ -68,7 +69,7 @@ namespace SystemMonitor
                     X2 = outer.X,
                     Y2 = outer.Y,
                     Stroke = new SolidColorBrush(Color.FromRgb(102, 102, 102)),
-                    StrokeThickness = 1,
+                    StrokeThickness = isMajor ? 2.2 : 1,
                     SnapsToDevicePixels = true
                 };
                 GaugeCanvas.Children.Add(tick);

@@ -1,6 +1,7 @@
 ﻿using LibreHardwareMonitor.Hardware;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SystemMonitor
@@ -16,7 +17,8 @@ namespace SystemMonitor
                 IsCpuEnabled = true,
                 IsGpuEnabled = true,
                 IsMemoryEnabled = true,
-                IsMotherboardEnabled = true
+                IsMotherboardEnabled = true,
+                IsControllerEnabled = true
             };
             _computer.Open();
         }
@@ -173,6 +175,12 @@ namespace SystemMonitor
                 .OrderByDescending(s => s.Value)
                 .ToList();
 
+            Debug.WriteLine($"=== Fan Sensors ({fanSensors.Count}) ===");
+            foreach (var sensor in fanCandidates)
+            {
+                Debug.WriteLine($"  {sensor.Name} [{sensor.SensorType}] => {sensor.Value?.ToString() ?? "null"}");
+            }
+
             if (fanSensors.Any())
             {
                 var preferred = fanSensors
@@ -180,6 +188,10 @@ namespace SystemMonitor
                     ?? fanSensors.First();
                 cpuFanRpm = preferred.Value ?? 0;
                 System.Diagnostics.Debug.WriteLine($"CPU Fan Sensor: {preferred.Name} => {cpuFanRpm} RPM");
+            }
+            else
+            {
+                Debug.WriteLine("No fan sensors reported RPM > 0");
             }
 
             return (cpu, gpu, cpuTemp, ramAvailable, ramTotal, cpuFanRpm);
